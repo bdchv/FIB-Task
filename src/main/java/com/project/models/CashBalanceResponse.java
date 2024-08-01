@@ -1,15 +1,18 @@
 package com.project.models;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
 import java.util.Map;
 
 @Getter
 @Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CashBalanceResponse {
-    private int bgnTotal;
-    private int eurTotal;
-    private Map<Integer, Integer> bgnDenominations;
-    private Map<Integer, Integer> eurDenominations;
+    int bgnTotal;
+    int eurTotal;
+    Map<Integer, Integer> bgnDenominations;
+    Map<Integer, Integer> eurDenominations;
 }

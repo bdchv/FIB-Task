@@ -1,3 +1,4 @@
 # Server configuration
 server.port=8080
-cash-desk-module.api-key=f9Uie8nNf112hx8s
+app.apiKey=f9Uie8nNf112hx8s
+app.username=MARTINA

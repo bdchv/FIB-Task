@@ -1,8 +1,9 @@
 package com.project.models;
 
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
@@ -11,14 +12,15 @@ import java.util.Map;
 
 @Getter
 @Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CashOperationsRequest {
     @NotNull
-    private String type;
+    String type;
     @NotNull
-    private String currency;
+    String currency;
     @Min(1)
-    private int amount;
+    int amount;
     @NotNull
     @NotEmpty
-    private Map<Integer, Integer> denominations;
+    Map<Integer, Integer> denominations;
 }
