@@ -25,7 +25,7 @@ public class OperationsServiceImpl implements OperationsService {
         bgnDenominations.put(50, 10);
         bgnDenominations.put(10, 50);
         eurDenominations.put(100, 10);
-        eurDenominations.put(20, 50);
+        eurDenominations.put(50, 20);
     }
 
     @Override
@@ -33,18 +33,50 @@ public class OperationsServiceImpl implements OperationsService {
         if ("deposit".equalsIgnoreCase(request.getType())) {
             if (request.getCurrency().equals("BGN")) {
                 bgnTotal += request.getAmount();
-                // TODO: 31.07.24 nominations
+                for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
+                    Integer denomination = entry.getKey();
+                    Integer count = entry.getValue();
+                    if (bgnDenominations.containsKey(denomination)) {
+                        if (denomination == 10) {
+                            bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 50) + count);
+                        } else {
+                            bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 10) + count);
+                        }
+                    }
+                }
             } else {
                 eurTotal += request.getAmount();
-                // TODO: 31.07.24 nominations
+                for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
+                    Integer denomination = entry.getKey();
+                    Integer count = entry.getValue();
+                    if (denomination == 50) {
+                        eurDenominations.put(denomination, eurDenominations.getOrDefault(denomination, 20) + count);
+                    } else {
+                        eurDenominations.put(20, 5);
+                    }
+                }
             }
         } else if ("withdrawal".equalsIgnoreCase(request.getType())) {
             if (request.getCurrency().equals("BGN")) {
                 bgnTotal -= request.getAmount();
-                // TODO: 31.07.24 nominations
+                for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
+                    Integer denomination = entry.getKey();
+                    Integer count = entry.getValue();
+                    if (denomination == 10) {
+                        bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 50) - count);
+                    } else {
+                        bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 10) - count);
+                    }
+                }
             } else {
                 eurTotal -= request.getAmount();
-                // TODO: 31.07.24 nominations
+                for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
+                    Integer denomination = entry.getKey();
+                    Integer count = entry.getValue();
+                    if (denomination == 50) {
+                        eurDenominations.put(denomination, eurDenominations.getOrDefault(denomination, 10) - count);
+                    }
+                }
             }
         }
         updateTransactionHistory(request);
@@ -63,11 +95,11 @@ public class OperationsServiceImpl implements OperationsService {
 
 
     private void updateTransactionHistory(CashOperationsRequest request) {
-        try  {
+        try {
             FileWriter writer = null;
-            if (checkDay()){
-                 writer = new FileWriter("transaction.txt",true);
-            }else {
+            if (checkDay()) {
+                writer = new FileWriter("transaction.txt", true);
+            } else {
                 writer = new FileWriter("transaction.txt");
             }
             if (request.getType().equalsIgnoreCase("deposit")) {
@@ -82,7 +114,7 @@ public class OperationsServiceImpl implements OperationsService {
         }
     }
 
-    private boolean checkDay(){
+    private boolean checkDay() {
         boolean isSameDay = true;
         LocalDate date = LocalDate.now();
         LocalDate previousDate = LocalDate.now().minusDays(1);
