@@ -18,8 +18,8 @@ public class OperationsServiceImpl implements OperationsService {
     private int eurTotal = 2000;
     private Map<Integer, Integer> bgnDenominations = new HashMap<>();
     private Map<Integer, Integer> eurDenominations = new HashMap<>();
-
-    private static final int[] valuta = {10, 20, 50, 100};
+    private static final String[] currency = {"BGN", "EUR"};
+    private static final String[] operations = {"deposit", "withdrawal"};
 
     @PostConstruct
     public void init() {
@@ -31,55 +31,52 @@ public class OperationsServiceImpl implements OperationsService {
 
     @Override
     public void processOperation(CashOperationsRequest request) {
-        if ("deposit".equalsIgnoreCase(request.getType())) {
-            if (request.getCurrency().equals("BGN")) {
+        if (operations[0].equalsIgnoreCase(request.getType())) {
+            if (request.getCurrency().equals(currency[0])) {
                 bgnTotal += request.getAmount();
-                for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
-                    Integer denomination = entry.getKey();
-                    Integer count = entry.getValue();
-                    if (denomination == 10) {
-                        bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 50) + count);
-                    } else {
-                        bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 10) + count);
-                    }
-                }
-            } else if (request.getCurrency().equals("EUR")) {
+                updateDenominations(bgnDenominations, request.getDenominations(), true);
+            } else if (request.getCurrency().equals(currency[1])) {
                 eurTotal += request.getAmount();
-                for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
-                    Integer denomination = entry.getKey();
-                    Integer count = entry.getValue();
-                    if (denomination == 50) {
-                        eurDenominations.put(denomination, eurDenominations.getOrDefault(denomination, 20) + count);
-                    } else {
-                        eurDenominations.put(20, 5);
-                    }
-                }
+                updateDenominations(eurDenominations, request.getDenominations(), true);
             }
-        } else if ("withdrawal".equalsIgnoreCase(request.getType())) {
-            if (request.getCurrency().equals("BGN")) {
+        } else if (operations[1].equalsIgnoreCase(request.getType())) {
+            if (request.getCurrency().equals(currency[0])) {
                 bgnTotal -= request.getAmount();
-                for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
-                    Integer denomination = entry.getKey();
-                    Integer count = entry.getValue();
-                    if (denomination == 10) {
-                        bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 50) - count);
-                    } else {
-                        bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 10) - count);
-                    }
-                }
-            } else {
+                updateDenominations(bgnDenominations, request.getDenominations(), false);
+            } else if (request.getCurrency().equals(currency[1])) {
                 eurTotal -= request.getAmount();
-                for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
-                    Integer denomination = entry.getKey();
-                    Integer count = entry.getValue();
-                    if (denomination == 50) {
-                        eurDenominations.put(denomination, eurDenominations.getOrDefault(denomination, 10) - count);
-                    }
-                }
+                updateDenominations(eurDenominations, request.getDenominations(), false);
             }
         }
         updateTransactionHistory(request);
         updateBalance();
+    }
+
+    private void updateDenominations(Map<Integer, Integer> targetDenominations,
+                                     Map<Integer, Integer> requestDenominations,
+                                     boolean isDeposit) {
+        for (Map.Entry<Integer, Integer> entry : requestDenominations.entrySet()) {
+            Integer denomination = entry.getKey();
+            Integer count = entry.getValue();
+            int initAmount = geTotalAmountOfDenomination(targetDenominations, denomination);
+            int updatedAmountDenominations;
+            if (isDeposit) {
+                updatedAmountDenominations = targetDenominations.getOrDefault(denomination, initAmount) + count;
+            } else {
+                updatedAmountDenominations = targetDenominations.getOrDefault(denomination, initAmount) - count;
+            }
+        }
+    }
+
+    private int geTotalAmountOfDenomination(Map<Integer, Integer> targetDenominations, Integer denomination) {
+        int defaultValue = 0;
+        for (Map.Entry<Integer, Integer> orig : targetDenominations.entrySet()) {
+            Integer denominationOrig = orig.getKey();
+            if (denominationOrig == denomination) {
+                defaultValue = orig.getValue();
+            }
+        }
+        return defaultValue;
     }
 
     @Override
@@ -92,35 +89,35 @@ public class OperationsServiceImpl implements OperationsService {
         return response;
     }
 
-
     private void updateTransactionHistory(CashOperationsRequest request) {
         try {
             FileWriter writer = null;
             writer = new FileWriter("transaction.txt", true);
             if (request.getType().equalsIgnoreCase("deposit")) {
-                writer.write("Deposit: " + request.getAmount() + " " + request.getCurrency() + "\n"
-                        + "Denomination: " + (request.getCurrency().equals("EUR") ? request.getDenominations().toString()
-                        .replace("{", "")
-                        .replace("=", "x")
-                        .replace("}", "") + "EUR " : request.getDenominations().toString()
-                        .replace("{", "")
-                        .replace("=", "x")
-                        .replace("}", "") + " BGN ") + "\n");
+                writer.write(writeContent(request));
             } else {
-                writer.write("Withdrawal: " + request.getAmount() + " " + request.getCurrency() + "\n"
-                        + "Denomination: " + (request.getCurrency().equals("EUR") ? request.getDenominations().toString()
-                        .replace("{", "")
-                        .replace("=", "x")
-                        .replace("}", "") + " EUR " : request.getDenominations().toString()
-                        .replace("{", "")
-                        .replace("=", "x")
-                        .replace("}", "") + " BGN ") + "\n");
+                writer.write(writeContent(request));
             }
             writer.flush();
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String writeContent( final CashOperationsRequest request) {
+        final StringBuilder builder = new StringBuilder();
+        builder.append(request.getType().equals("withdrawal") ?
+                "\n" + "Withdrawal: " + request.getAmount() + " " + request.getCurrency() + "\n"
+                : "\n" +  "Deposit: " + request.getAmount() + " " + request.getCurrency() + "\n");
+        for ( final Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
+            builder.append("Denomination: ")
+                    .append(entry.getValue())
+                    .append(" ").append("x ")
+                    .append(entry.getKey() + " ")
+                    .append(request.getCurrency() + "\n");
+        }
+        return builder.toString();
     }
 
     private void updateBalance() {
