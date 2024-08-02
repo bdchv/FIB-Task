@@ -1,7 +1,7 @@
 package com.project.controller;
 
 
-import com.project.conf.Config;
+import com.project.conf.AppConfig;
 import com.project.models.CashBalanceResponse;
 import com.project.models.CashOperationsRequest;
 import com.project.service.contracts.OperationsService;
@@ -19,17 +19,17 @@ public class OperationsController {
     @Autowired
     private OperationsService operationsService;
     @Autowired
-    private Config appConfig;
+    private AppConfig appConfig;
 
     @Autowired
-    public OperationsController(Config appConfig, OperationsService operationsService) {
+    public OperationsController(AppConfig appConfig, OperationsService operationsService) {
         this.appConfig = appConfig;
         this.operationsService = operationsService;
     }
 
     @PostMapping("/cash-operation")
     public ResponseEntity<String> handleCashOperation(
-            @RequestHeader("FIB-X-AUTH") String apiKey, @RequestHeader(value = "username") String username,
+            @RequestHeader("FIB-X-AUTH") String apiKey, @RequestHeader("username") String username,
             @Valid @RequestBody CashOperationsRequest request) {
         if (!appConfig.getApiKey().equals(apiKey) && !appConfig.getUsername().equals(username)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid API Key or UserName");
@@ -40,7 +40,7 @@ public class OperationsController {
 
     @GetMapping("/cash-balance")
     public ResponseEntity<CashBalanceResponse> getCashBalance(@RequestHeader("FIB-X-AUTH") String apiKey,
-                                                              @RequestHeader(value = "username") String username) {
+                                                              @RequestHeader("username") String username) {
         if (!appConfig.getApiKey().equals(apiKey) && !appConfig.getUsername().equals(username)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }

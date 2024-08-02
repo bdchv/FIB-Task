@@ -20,6 +20,8 @@ public class OperationsServiceImpl implements OperationsService {
     private Map<Integer, Integer> bgnDenominations = new HashMap<>();
     private Map<Integer, Integer> eurDenominations = new HashMap<>();
 
+    private static final int[] valuta = {10, 20, 50, 100};
+
     @PostConstruct
     public void init() {
         bgnDenominations.put(50, 10);
@@ -36,15 +38,13 @@ public class OperationsServiceImpl implements OperationsService {
                 for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
                     Integer denomination = entry.getKey();
                     Integer count = entry.getValue();
-                    if (bgnDenominations.containsKey(denomination)) {
                         if (denomination == 10) {
                             bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 50) + count);
                         } else {
                             bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 10) + count);
                         }
-                    }
                 }
-            } else {
+            } else if (request.getCurrency().equals("EUR")) {
                 eurTotal += request.getAmount();
                 for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
                     Integer denomination = entry.getKey();
@@ -97,31 +97,19 @@ public class OperationsServiceImpl implements OperationsService {
     private void updateTransactionHistory(CashOperationsRequest request) {
         try {
             FileWriter writer = null;
-            if (checkDay()) {
-                writer = new FileWriter("transaction.txt", true);
-            } else {
-                writer = new FileWriter("transaction.txt");
-            }
+            writer = new FileWriter("transaction.txt", true);
             if (request.getType().equalsIgnoreCase("deposit")) {
-                writer.write("Deposit: " + request.getAmount() + " " + request.getCurrency() + "\n");
+                writer.write("Deposit: " + request.getAmount() + " " + request.getCurrency() + "\n"
+                        + (request.getCurrency().equals("EUR") ? eurDenominations : bgnDenominations));
             } else {
-                writer.write("Withdrawal: " + request.getAmount() + " " + request.getCurrency() + "\n");
+                writer.write("Withdrawal: " + request.getAmount() + " " + request.getCurrency() + "\n"
+                        + (request.getCurrency().equals("EUR") ? eurDenominations : bgnDenominations));
             }
             writer.flush();
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private boolean checkDay() {
-        boolean isSameDay = true;
-        LocalDate date = LocalDate.now();
-        LocalDate previousDate = LocalDate.now().minusDays(1);
-        if (date.equals(previousDate)) {
-            isSameDay = false;
-        }
-        return isSameDay;
     }
 
     private void updateBalance() {
