@@ -62,8 +62,10 @@ public class OperationsServiceImpl implements OperationsService {
             int updatedAmountDenominations;
             if (isDeposit) {
                 updatedAmountDenominations = targetDenominations.getOrDefault(denomination, initAmount) + count;
+                targetDenominations.put(denomination, updatedAmountDenominations);
             } else {
                 updatedAmountDenominations = targetDenominations.getOrDefault(denomination, initAmount) - count;
+                targetDenominations.put(denomination, updatedAmountDenominations);
             }
         }
     }
@@ -94,9 +96,9 @@ public class OperationsServiceImpl implements OperationsService {
             FileWriter writer = null;
             writer = new FileWriter("transaction.txt", true);
             if (request.getType().equalsIgnoreCase("deposit")) {
-                writer.write(writeContent(request));
+                writer.write(fillTransactionContent(request));
             } else {
-                writer.write(writeContent(request));
+                writer.write(fillTransactionContent(request));
             }
             writer.flush();
             writer.close();
@@ -105,12 +107,12 @@ public class OperationsServiceImpl implements OperationsService {
         }
     }
 
-    private String writeContent( final CashOperationsRequest request) {
+    private String fillTransactionContent(final CashOperationsRequest request) {
         final StringBuilder builder = new StringBuilder();
         builder.append(request.getType().equals("withdrawal") ?
                 "\n" + "Withdrawal: " + request.getAmount() + " " + request.getCurrency() + "\n"
-                : "\n" +  "Deposit: " + request.getAmount() + " " + request.getCurrency() + "\n");
-        for ( final Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
+                : "\n" + "Deposit: " + request.getAmount() + " " + request.getCurrency() + "\n");
+        for (final Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
             builder.append("Denomination: ")
                     .append(entry.getValue())
                     .append(" ").append("x ")
@@ -122,12 +124,28 @@ public class OperationsServiceImpl implements OperationsService {
 
     private void updateBalance() {
         try (FileWriter writer = new FileWriter("balance.txt")) {
-            writer.write("BGN Total:" + bgnTotal + "\n");
-            writer.write("BGN Denominations: " + bgnDenominations + "\n");
-            writer.write("EUR Total: " + eurTotal + "\n");
-            writer.write("EUR Denominations: " + eurDenominations + "\n");
+            writer.write(fillBalanceContent());
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String fillBalanceContent() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("BGN Total: ").append(bgnTotal + "\n")
+                .append("BGN Denominations: " + "\n");
+        for (final Map.Entry<Integer, Integer> entry : bgnDenominations.entrySet()) {
+            builder.append(entry.getValue())
+                    .append(" ").append("x ")
+                    .append(entry.getKey() + " " + "BGN ");
+        }
+        builder.append( "\n" + "EUR Total: ").append(eurTotal + "\n")
+                .append("EUR Denominations: " + "\n");
+        for (final Map.Entry<Integer, Integer> entry : eurDenominations.entrySet()) {
+            builder.append(entry.getValue())
+                    .append(" ").append("x ")
+                    .append(entry.getKey() + " EUR " +  " ");
+        }
+        return builder.toString();
     }
 }
