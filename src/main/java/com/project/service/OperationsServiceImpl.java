@@ -100,10 +100,10 @@ public class OperationsServiceImpl implements OperationsService {
             writer = new FileWriter("transaction.txt", true);
             if (request.getType().equalsIgnoreCase("deposit")) {
                 writer.write("Deposit: " + request.getAmount() + " " + request.getCurrency() + "\n"
-                        + (request.getCurrency().equals("EUR") ? eurDenominations : bgnDenominations));
+                        + (request.getCurrency().equals("EUR") ? eurDenominations + "EUR " : bgnDenominations + " BGN "));
             } else {
                 writer.write("Withdrawal: " + request.getAmount() + " " + request.getCurrency() + "\n"
-                        + (request.getCurrency().equals("EUR") ? eurDenominations : bgnDenominations));
+                        + (request.getCurrency().equals("EUR") ? eurDenominations + " EUR ": bgnDenominations + " BGN "));
             }
             writer.flush();
             writer.close();
