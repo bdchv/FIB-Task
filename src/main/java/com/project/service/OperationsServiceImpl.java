@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,11 +37,11 @@ public class OperationsServiceImpl implements OperationsService {
                 for (Map.Entry<Integer, Integer> entry : request.getDenominations().entrySet()) {
                     Integer denomination = entry.getKey();
                     Integer count = entry.getValue();
-                        if (denomination == 10) {
-                            bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 50) + count);
-                        } else {
-                            bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 10) + count);
-                        }
+                    if (denomination == 10) {
+                        bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 50) + count);
+                    } else {
+                        bgnDenominations.put(denomination, bgnDenominations.getOrDefault(denomination, 10) + count);
+                    }
                 }
             } else if (request.getCurrency().equals("EUR")) {
                 eurTotal += request.getAmount();
@@ -100,10 +99,22 @@ public class OperationsServiceImpl implements OperationsService {
             writer = new FileWriter("transaction.txt", true);
             if (request.getType().equalsIgnoreCase("deposit")) {
                 writer.write("Deposit: " + request.getAmount() + " " + request.getCurrency() + "\n"
-                        + (request.getCurrency().equals("EUR") ? eurDenominations + "EUR " : bgnDenominations + " BGN "));
+                        + "Denomination: " + (request.getCurrency().equals("EUR") ? request.getDenominations().toString()
+                        .replace("{", "")
+                        .replace("=", "x")
+                        .replace("}", "") + "EUR " : request.getDenominations().toString()
+                        .replace("{", "")
+                        .replace("=", "x")
+                        .replace("}", "") + " BGN ") + "\n");
             } else {
                 writer.write("Withdrawal: " + request.getAmount() + " " + request.getCurrency() + "\n"
-                        + (request.getCurrency().equals("EUR") ? eurDenominations + " EUR ": bgnDenominations + " BGN "));
+                        + "Denomination: " + (request.getCurrency().equals("EUR") ? request.getDenominations().toString()
+                        .replace("{", "")
+                        .replace("=", "x")
+                        .replace("}", "") + " EUR " : request.getDenominations().toString()
+                        .replace("{", "")
+                        .replace("=", "x")
+                        .replace("}", "") + " BGN ") + "\n");
             }
             writer.flush();
             writer.close();
