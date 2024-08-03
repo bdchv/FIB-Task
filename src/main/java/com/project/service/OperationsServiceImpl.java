@@ -92,16 +92,12 @@ public class OperationsServiceImpl implements OperationsService {
     }
 
     private void updateTransactionHistory(CashOperationsRequest request) {
-        try {
-            FileWriter writer = null;
-            writer = new FileWriter("transaction.txt", true);
+        try (FileWriter writer = new FileWriter("transaction.txt", true)) {
             if (request.getType().equalsIgnoreCase("deposit")) {
                 writer.write(fillTransactionContent(request));
             } else {
                 writer.write(fillTransactionContent(request));
             }
-            writer.flush();
-            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -132,20 +128,18 @@ public class OperationsServiceImpl implements OperationsService {
 
     private String fillBalanceContent() {
         final StringBuilder builder = new StringBuilder();
-        builder.append("BGN Total: ").append(bgnTotal + "\n")
-                .append("BGN Denominations: " + "\n");
-        for (final Map.Entry<Integer, Integer> entry : bgnDenominations.entrySet()) {
-            builder.append(entry.getValue())
-                    .append(" ").append("x ")
-                    .append(entry.getKey() + " " + "BGN ");
-        }
-        builder.append( "\n" + "EUR Total: ").append(eurTotal + "\n")
-                .append("EUR Denominations: " + "\n");
-        for (final Map.Entry<Integer, Integer> entry : eurDenominations.entrySet()) {
-            builder.append(entry.getValue())
-                    .append(" ").append("x ")
-                    .append(entry.getKey() + " EUR " +  " ");
-        }
+        appendCurrencyDetails(builder, "BGN", bgnTotal, bgnDenominations);
+        appendCurrencyDetails(builder, "EUR", eurTotal, eurDenominations);
         return builder.toString();
+    }
+
+    private void appendCurrencyDetails(StringBuilder builder, String currency, int total, Map<Integer, Integer> denominations) {
+        builder.append(currency).append(" Total: ").append(total).append("\n")
+                .append(currency).append(" Denominations: ").append("\n");
+        for (Map.Entry<Integer, Integer> entry : denominations.entrySet()) {
+            builder.append(entry.getValue()).append(" x ")
+                    .append(entry.getKey()).append(" ").append(currency).append(" ");
+        }
+        builder.append("\n");
     }
 }

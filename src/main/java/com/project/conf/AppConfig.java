@@ -18,5 +18,4 @@ public class AppConfig {
 
     @Value("${apiKey}")
     String apiKey;
-
 }

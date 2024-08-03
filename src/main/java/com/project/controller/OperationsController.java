@@ -1,6 +1,5 @@
 package com.project.controller;
 
-
 import com.project.conf.AppConfig;
 import com.project.models.CashBalanceResponse;
 import com.project.models.CashOperationsRequest;
@@ -39,13 +38,12 @@ public class OperationsController {
     }
 
     @GetMapping("/cash-balance")
-    public ResponseEntity<CashBalanceResponse> getCashBalance(@RequestHeader("FIB-X-AUTH") String apiKey,
-                                                              @RequestHeader("username") String username) {
+    public ResponseEntity<CashBalanceResponse> getCashBalance(
+            @RequestHeader("FIB-X-AUTH") String apiKey, @RequestHeader("username") String username) {
         if (!appConfig.getApiKey().equals(apiKey) && !appConfig.getUsername().equals(username)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         CashBalanceResponse balanceResponse = operationsService.getBalance();
         return ResponseEntity.ok(balanceResponse);
     }
-
 }
